@@ -18,6 +18,8 @@ package com.alibaba.dubbo.demo;
 
 public interface DemoService {
 
-    String sayHello(String name);
+    String sayYes(String name);
+
+    String sayNo(String name);
 
 }

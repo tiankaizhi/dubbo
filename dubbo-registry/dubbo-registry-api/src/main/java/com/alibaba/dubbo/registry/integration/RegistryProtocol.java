@@ -131,21 +131,27 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        //export invoker
+        // export invoker
+        // 这里就交给了具体的协议去暴露服务
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
         URL registryUrl = getRegistryUrl(originInvoker);
 
-        //registry provider
+        // registry provider
+        // 根据 invoker 中的 url 获取 Registry 实例
         final Registry registry = getRegistry(originInvoker);
-        final URL registeredProviderUrl = getRegisteredProviderUrl(originInvoker);
 
-        //to judge to delay publish whether or not
+        // 获取注册到注册中心的 URL
+        final URL registeredProviderUrl = getRegisteredProviderUrl(originInvoker);
+        // to judge to delay publish whether or not
         boolean register = registeredProviderUrl.getParameter("register", true);
 
         ProviderConsumerRegTable.registerProvider(originInvoker, registryUrl, registeredProviderUrl);
 
         if (register) {
+            // 调用 register 方法进行服务注册
+            // 若有消费者订阅此服务, 则推送消息让消费者引用此服务
+            // 注册中心缓存了所有提供者注册的服务以供消费者发现
             register(registryUrl, registeredProviderUrl);
             ProviderConsumerRegTable.getProviderWrapper(originInvoker).setReg(true);
         }

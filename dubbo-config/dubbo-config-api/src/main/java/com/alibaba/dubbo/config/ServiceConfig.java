@@ -509,8 +509,16 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
 
+                        // 根据具体实现类, 实现接口, 以及 registryUrl(存储的是注册中心的地址,使用 export 作为 key 追加服务元数据信息)
+                        // 通过 ProxyFactory 将 DemoServiceImpl 封装成一个具体的本地执行的 Invoker
+                        // invoker 是 DemoServiceImpl 的代理对象, 具体是怎样动态代理生成的, 后面会详细分析.
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+
+                        // 使用 Protocol 将 invoker 导出成一个 Exporter
+                        // 暴露封装服务 invoker
+                        // 调用 Protocol 生成的适配类的 export 方法
+                        // 这里的 protocol 是上面列出的生成的代码
 
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);

@@ -25,9 +25,18 @@ import java.util.Date;
 public class DemoServiceImpl implements DemoService {
 
     @Override
-    public String sayHello(String name) {
-        System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] Hello " + name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
-        return "Hello " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress();
+    public String sayYes(String name) {
+        System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] yes " +
+                name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+
+        return "yes " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress();
     }
 
+    @Override
+    public String sayNo(String name) {
+        System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] no " +
+                name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+
+        return "no " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress();
+    }
 }
