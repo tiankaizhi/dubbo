@@ -453,6 +453,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 logger.warn("NO method found in service interface " + interfaceClass.getName());
                 map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);
             } else {
+                // 如有多个方法, 用逗号隔开
                 map.put(Constants.METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
             }
         }
@@ -498,7 +499,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 }
                 if (registryURLs != null && !registryURLs.isEmpty()) {
                     for (URL registryURL : registryURLs) {
+                        // "dynamic":服务是否动态注册，如果设为false，注册后将显示后disable状态，需人工启用，并且服务提供者停止时，也不会自动取消册，需人工禁用
                         url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));
+                        // 获得监控中心 URL
                         URL monitorUrl = loadMonitor(registryURL);
                         if (monitorUrl != null) {
                             url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());
@@ -513,7 +516,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
 
-                        // 根据具体实现类, 实现接口, 以及 registryUrl(存储的是注册中心的地址,使用 export 作为 key 追加服务元数据信息)
+                        // 根据具体实现类, 实现接口, 以及 registryUrl (存储的是注册中心的地址, 使用 export 作为 key 追加服务元数据信息)
                         // 通过 ProxyFactory 将 DemoServiceImpl 封装成一个具体的本地执行的 Invoker
                         // invoker 是 DemoServiceImpl 的代理对象, 具体是怎样动态代理生成的, 后面会详细分析.
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
