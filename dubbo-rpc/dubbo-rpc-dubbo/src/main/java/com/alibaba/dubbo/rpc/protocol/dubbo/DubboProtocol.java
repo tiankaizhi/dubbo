@@ -63,6 +63,8 @@ public class DubboProtocol extends AbstractProtocol {
     private static final String IS_CALLBACK_SERVICE_INVOKE = "_isCallBackServiceInvoke";
     private static DubboProtocol INSTANCE;
     private final Map<String, ExchangeServer> serverMap = new ConcurrentHashMap<String, ExchangeServer>(); // <host:port,Exchanger>
+
+    // 通信客户端集合
     private final Map<String, ReferenceCountExchangeClient> referenceClientMap = new ConcurrentHashMap<String, ReferenceCountExchangeClient>(); // <host:port,Exchanger>
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap = new ConcurrentHashMap<String, LazyConnectExchangeClient>();
     private final ConcurrentMap<String, Object> locks = new ConcurrentHashMap<String, Object>();
@@ -228,9 +230,14 @@ public class DubboProtocol extends AbstractProtocol {
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
 
-        // export service.
+        // export service
+        // 调用父类 AbstractProtocol 方法获取 key
         String key = serviceKey(url);
+
+        // 创建 DubboExporter 对象，并添加到 exporterMap
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+
+        // 添加到 exporterMap 中，该属性从父类 (AbstractProtocol) 继承而来
         exporterMap.put(key, exporter);
 
         //export an stub service for dispatching event
@@ -248,11 +255,16 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
+        // @1 重点: 开启服务器
         openServer(url);
         optimizeSerialization(url);
         return exporter;
     }
 
+    /**
+     * 启动通信服务器
+     *
+     */
     private void openServer(URL url) {
         // find server.
         String key = url.getAddress();

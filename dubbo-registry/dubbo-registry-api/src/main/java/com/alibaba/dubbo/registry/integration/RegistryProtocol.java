@@ -133,23 +133,26 @@ public class RegistryProtocol implements Protocol {
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
         // export invoker
         // 这里就交给了具体的协议去暴露服务
-        final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
+        final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker); // @1
 
+        // 获得注册中心 URL
         URL registryUrl = getRegistryUrl(originInvoker);
 
         // registry provider
-        // 根据 invoker 中的 url 获取 Registry 实例
+        // 根据 invoker 中的 url 获得注册中心对象 Registry 实例
         final Registry registry = getRegistry(originInvoker);
 
         // 获取注册到注册中心的 URL
         final URL registeredProviderUrl = getRegisteredProviderUrl(originInvoker);
+
         // to judge to delay publish whether or not
         boolean register = registeredProviderUrl.getParameter("register", true);
 
+        // 向本地注册表，注册服务提供者
         ProviderConsumerRegTable.registerProvider(originInvoker, registryUrl, registeredProviderUrl);
 
+        // 向注册中心注册服务提供者（自己）
         if (register) {
-            // 调用 register 方法进行服务注册
             // 若有消费者订阅此服务, 则推送消息让消费者引用此服务
             // 注册中心缓存了所有提供者注册的服务以供消费者发现
             register(registryUrl, registeredProviderUrl);
@@ -166,16 +169,32 @@ public class RegistryProtocol implements Protocol {
         return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registeredProviderUrl);
     }
 
+    /**
+     * 暴露服务。
+     *
+     * 此处的 Local 指的是，本地启动服务，但是不包括向注册中心注册服务的意思。
+     *
+     * @param originInvoker 原始 Invoker
+     * @param <T> 泛型
+     * @return Exporter 对象
+     */
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker) {
-        String key = getCacheKey(originInvoker);
-        ExporterChangeableWrapper<T> exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
+        // 获得在 `bounds` 中的缓存 Key
+        String key = getCacheKey(originInvoker);  // @1
+        // 从 `bounds` 获得，是不是已经暴露过服务
+        ExporterChangeableWrapper<T> exporter = (ExporterChangeableWrapper<T>) bounds.get(key); // @2
         if (exporter == null) {
             synchronized (bounds) {
                 exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
+                // 未暴露过，进行暴露服务
                 if (exporter == null) {
-                    final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
+                    // 创建 Invoker Delegate 对象
+                    final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker)); // @3
+                    // 暴露服务，创建 Exporter 对象
+                    // 使用 创建的 Exporter对象 + originInvoker ，创建 ExporterChangeableWrapper 对象
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
+                    // 添加到 `bounds`
                     bounds.put(key, exporter);
                 }
             }
