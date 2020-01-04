@@ -25,7 +25,7 @@
     <dubbo:application name="demo-provider"/>
 
     <!-- use multicast registry center to export service -->
-    <dubbo:registry address="zookeeper://192.168.25.128:2181"/>
+    <dubbo:registry id="first-registry" protocol="zookeeper" address="192.168.25.128:2181"/>
 
     <!-- use dubbo protocol to export service on port 20880 -->
     <dubbo:protocol name="dubbo" port="20880"/>
@@ -40,6 +40,6 @@
     <bean id="helloService" class="com.alibaba.dubbo.demo.provider.HelloServiceImpl"/>
 
     <!-- declare the service interface to be exported -->
-    <dubbo:service interface="com.alibaba.dubbo.demo.HelloService" ref="helloService" dynamic="false"/>
+    <dubbo:service interface="com.alibaba.dubbo.demo.HelloService" ref="helloService"/>
 
 </beans>
